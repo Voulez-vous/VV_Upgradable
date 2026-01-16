@@ -1,0 +1,24 @@
+{
+    "name": "voulezvous.upgradable.system",
+    "rootNamespace": "",
+    "references": [
+        "GUID:dc6b1cfd2cda163449f404f1bc5a2c27"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "VV_UTILITY_LOADED"
+    ],
+    "versionDefines": [
+        {
+            "name": "com.vv.utility",
+            "expression": "0.0.2",
+            "define": "VV_UTILITY_LOADED"
+        }
+    ],
+    "noEngineReferences": false
+}

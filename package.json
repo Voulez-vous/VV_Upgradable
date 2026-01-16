@@ -1,0 +1,21 @@
+{
+  "name": "com.vv.upgradable",
+  "versionDefines": [
+    {
+      "name": "com.vv.utility",
+      "expression": ">=0.0.2",
+      "define": "VV_UTILITY_LOADED"
+    }
+  ],
+  "displayName": "VV Upgradable",
+  "version": "0.0.1",
+  "unity": "6000.0",
+  "dependencies": {
+    "com.vv.utility": "0.0.2"
+  },
+  "keywords": [
+    "upgradable"
+  ],
+  "type": "tool",
+  "description": ""
+}
