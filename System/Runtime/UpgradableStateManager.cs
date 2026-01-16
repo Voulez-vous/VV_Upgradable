@@ -147,7 +147,7 @@ namespace VV.Upgradable
         protected virtual void OnLevelChanged()
         {
             UpgradeManager.BroadcastLevelChanged(this);
-            if(Level == upgradableSO.MaxLevel) UpgradeManager.BroadcastMaxLevelReached(this);
+            // if(Level == upgradableSO.MaxLevel) UpgradeManager.BroadcastMaxLevelReached(this);
         }
         
         protected virtual void OnUpgradableSOSet() { }

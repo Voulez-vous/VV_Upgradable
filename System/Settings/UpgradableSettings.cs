@@ -12,7 +12,9 @@ namespace VV.Upgradable.Settings
     public class UpgradableSettings : ScriptableObject
     {
         public static string SettingsName => "UpgradableSettings";
-        public static string SettingsPath => $"Assets/Resources/VV/Upgradables/";
+        public static string SettingsResourcePath => $"VV/Upgradables/";
+        public static string SettingsResourceFullPath => $"{SettingsResourcePath}{SettingsName}";
+        public static string SettingsPath => $"Assets/Resources/{SettingsResourcePath}";
         public static string SettingsFullPath => $"{SettingsPath}/{SettingsName}.asset";
         
         [SerializeField] public List<UpgradableSO> activeUpgradables = new();
@@ -45,6 +47,11 @@ namespace VV.Upgradable.Settings
                              upgradableSo != null && !string.IsNullOrEmpty(upgradableSo.UpgradeName)))
             {
                 sr.WriteLine($"        {upgradableSo.UpgradeName.Replace(" ", "")},");
+                foreach (UpgradableInstanceConfigSO instanceSo in upgradableSo.UpgradableInstances.Where(upgradableInstanceSo => 
+                             upgradableInstanceSo != null && !string.IsNullOrEmpty(upgradableInstanceSo.InstanceName)))
+                {
+                    sr.WriteLine($"        {instanceSo.InstanceName.Replace(" ", "")},");
+                }
             }
             sr.WriteLine("        None,");
             sr.Write("    }\n" +

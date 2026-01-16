@@ -46,7 +46,7 @@ namespace VV.Upgradable
             public void SetName() => name = $"Level {level}";
             [SerializeField] private int level;
             [Tooltip("Score earned after upgrading to this level.")]
-            [SerializeField] [Obsolete("THe score should not be in this component")] private int score;
+            [SerializeField] private int score;
             [Tooltip("Conditions to upgrade to any level.")]
             [SerializeField] private List<UpgradeConditionSO> conditions;
 

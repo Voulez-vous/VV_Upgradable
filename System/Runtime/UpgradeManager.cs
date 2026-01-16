@@ -28,7 +28,7 @@ namespace VV.Upgradable
         public static event UnityAction<UpgradableStateManager> EditorLevelChanged;
         public static readonly Dictionary<string, UnityAction<UpgradableStateManager>> LevelChanged = new();
         public static readonly Dictionary<string, UnityAction<UpgradableStateManager>> MaxLevelReached = new();
-        public static event UnityAction<UpgradableStateManager> MaxLevelAlreadyReached;
+        public static readonly Dictionary<string, UnityAction<UpgradableStateManager>> MaxLevelAlreadyReached = new();
         public static event UnityAction<UpgradableStateManager> UpgradeSuccess;
         public static event UnityAction<UpgradableStateManager> UpgradeFailed;
         public static event UnityAction<UpgradableBase> UpgradableInitialized;
@@ -44,7 +44,7 @@ namespace VV.Upgradable
         {
             try
             {
-                UpgradableSettings customSettings = Resources.Load<UpgradableSettings>(UpgradableSettings.SettingsName);
+                UpgradableSettings customSettings = Resources.Load<UpgradableSettings>(UpgradableSettings.SettingsResourceFullPath);
                 if(customSettings == null) return;
         
                 StateManagerContainer = new GameObject("Upgradables");
@@ -73,8 +73,8 @@ namespace VV.Upgradable
                 string normalizedUpgradableName = upgradable.UpgradeName.Replace(" ", "");
                 if (!Enum.TryParse(normalizedUpgradableName, out UpgradeType type))
                 {
-                    Debug.LogError($"Invalid upgradable name : {upgradable.UpgradeName}");
-                    return;
+                    Debug.LogWarning($"Invalid upgradable name : {upgradable.UpgradeName}");
+                    // return;
                 }
 
                 if (upgradable.UpgradableInstances.Count == 0)
@@ -96,8 +96,9 @@ namespace VV.Upgradable
                 }
                 else
                 {
-                    GameObject subContainer = Object.Instantiate(
-                        new GameObject($"{upgradable.UpgradeName}StateManagers"), StateManagerContainer.transform);
+                    GameObject tmp = new GameObject($"{upgradable.UpgradeName}StateManagers");
+                    GameObject subContainer = Object.Instantiate(tmp, StateManagerContainer.transform);
+                    Object.Destroy(tmp);
                     
                     foreach (UpgradableInstanceConfigSO instanceConfig in upgradable.UpgradableInstances)
                     {
@@ -123,20 +124,21 @@ namespace VV.Upgradable
                 string normalizedInstanceName = instanceConfig.InstanceName.Replace(" ", "");
                 if (!Enum.TryParse(normalizedInstanceName, out UpgradeType type))
                 {
-                    Debug.LogError($"Invalid instance name : {instanceConfig.InstanceName}");
-                    return;
+                    Debug.LogWarning($"Invalid instance name : {instanceConfig.InstanceName}");
+                    // return;
                 }
                 
                 if (upgradable.StateManagerPrefab)
                 {
-                    GameObject newStateManagerGo = Object.Instantiate(upgradable.StateManagerPrefab, parent.transform);
+                    GameObject newStateManagerGo = Object.Instantiate(upgradable.StateManagerPrefab, parent);
             
                     stateManager = newStateManagerGo.GetComponent<UpgradableStateManager>();
                     stateManager.UpgradableInstanceSO = instanceConfig;
                 } else
                 {
-                    GameObject newStateManagerGo = Object.Instantiate(
-                        new GameObject($"{instanceConfig.InstanceName}StateManager"), parent.transform);
+                    GameObject tmp = new GameObject($"{instanceConfig.InstanceName}StateManager");
+                    GameObject newStateManagerGo = Object.Instantiate(tmp, parent);
+                    Object.Destroy(tmp);
             
                     stateManager = newStateManagerGo.AddComponent<UpgradableStateManager>();
                     stateManager.UpgradableSO = upgradable;
@@ -242,15 +244,14 @@ namespace VV.Upgradable
         
         public static void BroadcastMaxLevelAlreadyReached(UpgradableStateManager upgradableStateManager)
         {
-            if (MaxLevelReached == null)
+            if (MaxLevelAlreadyReached == null)
             {
                 Debug.LogWarning($"[UpgradeManager] MaxLevelReached event is null");
                 return;
             }
-            MaxLevelReached[upgradableStateManager.TypeID]?.Invoke(upgradableStateManager);
+            MaxLevelAlreadyReached[upgradableStateManager.TypeID]?.Invoke(upgradableStateManager);
             if(upgradableStateManager.InstanceID != null)
-                MaxLevelReached[upgradableStateManager.InstanceID]?.Invoke(upgradableStateManager);
-            MaxLevelAlreadyReached?.Invoke(upgradableStateManager);
+                MaxLevelAlreadyReached[upgradableStateManager.InstanceID]?.Invoke(upgradableStateManager);
         }
         
         public static void BroadcastLevelUp(UpgradableStateManager upgradableStateManager)

@@ -36,19 +36,21 @@ namespace VV.Upgradable
 
         #region Unity Events
 
-        protected virtual void OnEnable()
+        protected virtual void Start()
         {
-            this.LogLog($"[{GetType().Name}] OnEnable()");
+            // this.LogLog($"[{GetType().Name}] OnEnable()");
             AutoDetectUpgradableConfiguration();
             UpgradeManager.EditorLevelChanged += EditorLevelChangedCallback;
             
             RegisterUpgradableEvent(UpgradeManager.LevelChanged,
                 TypeLevelChangedCallback, InstanceLevelChangedCallback);
             RegisterUpgradableEvent(UpgradeManager.MaxLevelReached,
-                LevelMaxReachedCallback, LevelMaxReachedCallback);
+                null, LevelMaxReachedCallback);
+            RegisterUpgradableEvent(UpgradeManager.MaxLevelAlreadyReached,
+                null, LevelMaxAlreadyReachedCallback);
             
             // UpgradeManager.MaxLevelReached += LevelMaxReachedCallback;
-            UpgradeManager.MaxLevelAlreadyReached += LevelMaxCallback;
+            // UpgradeManager.MaxLevelAlreadyReached += LevelMaxCallback;
             UpgradeManager.UpgradeSuccess += UpgradeSuccessCallback;
             UpgradeManager.UpgradeFailed += UpgradeFailedCallback;
             UpgradeManager.UpgradableInitialized += UpgradableInitializedCallback;
@@ -57,27 +59,34 @@ namespace VV.Upgradable
 
         protected virtual void OnDisable()
         {
-            this.LogLog($"[{GetType().Name}] OnDisable()");
+            // this.LogLog($"[{GetType().Name}] OnDisable()");
             UpgradeManager.EditorLevelChanged -= EditorLevelChangedCallback;
             
             UnregisterUpgradableEvent(UpgradeManager.LevelChanged,
                 TypeLevelChangedCallback, InstanceLevelChangedCallback);
             UnregisterUpgradableEvent(UpgradeManager.MaxLevelReached,
-                LevelMaxReachedCallback, LevelMaxReachedCallback);
+                null, LevelMaxReachedCallback);
+            UnregisterUpgradableEvent(UpgradeManager.MaxLevelAlreadyReached,
+                null, LevelMaxAlreadyReachedCallback);
             
             // UpgradeManager.MaxLevelReached -= LevelMaxReachedCallback;
-            UpgradeManager.MaxLevelAlreadyReached -= LevelMaxCallback;
+            // UpgradeManager.MaxLevelAlreadyReached -= LevelMaxCallback;
             UpgradeManager.UpgradeSuccess -= UpgradeSuccessCallback;
             UpgradeManager.UpgradeFailed -= UpgradeFailedCallback;
             UpgradeManager.UpgradableInitialized -= UpgradableInitializedCallback;
+            UpgradeManager.RollbackToPreviousLevel -= UpgradeManagerRollbackToPreviousLevel;
         }
 
         protected void RegisterUpgradableEvent<T>(
             Dictionary<string, UnityAction<T>> broadcastEvent,
             UnityAction<T> typeAction, UnityAction<T> instanceAction)
         {
-            broadcastEvent[upgradableSO.ID] += typeAction;
-            if(instanceConfigSO)
+            if(broadcastEvent.TryGetValue(upgradableSO.ID, out UnityAction<T> _) 
+               && typeAction != null)
+                broadcastEvent[upgradableSO.ID] += typeAction;
+            if(instanceConfigSO 
+               && broadcastEvent.TryGetValue(instanceConfigSO.ID, out UnityAction<T> _) 
+               && instanceAction != null)
                 broadcastEvent[instanceConfigSO.ID] += instanceAction;
         }
         
@@ -85,8 +94,12 @@ namespace VV.Upgradable
             Dictionary<string, UnityAction<T>> broadcastEvent,
             UnityAction<T> typeAction, UnityAction<T> instanceAction)
         {
-            broadcastEvent[upgradableSO.ID] -= typeAction;
-            if(instanceConfigSO)
+            if(broadcastEvent.TryGetValue(upgradableSO.ID, out UnityAction<T> _) 
+               && typeAction != null)
+                broadcastEvent[upgradableSO.ID] -= typeAction;
+            if(instanceConfigSO 
+               && broadcastEvent.TryGetValue(instanceConfigSO.ID, out UnityAction<T> _) 
+               && instanceAction != null)
                 broadcastEvent[instanceConfigSO.ID] -= instanceAction;
         }
 
@@ -96,7 +109,7 @@ namespace VV.Upgradable
         
         private void EditorLevelChangedCallback(UpgradableStateManager stateManager)
         {
-            Debug.Log($"[{GetType().Name}] {stateManager.Name} updated level to {stateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {stateManager.Name} updated level to {stateManager.Level}");
             if (!stateManager.IsInstance(upgradableSO, instanceConfigSO)) return;
             OnEditorLevelChanged?.Invoke(stateManager.Level);
         }
@@ -121,21 +134,21 @@ namespace VV.Upgradable
 
         private void LevelMaxReachedCallback(UpgradableStateManager stateManager)
         {
-            Debug.Log($"[{GetType().Name}] {stateManager.Name} reached level max : {stateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {stateManager.Name} reached level max : {stateManager.Level}");
             if (!stateManager.IsInstance(upgradableSO, instanceConfigSO)) return;
             OnLevelMaxReached?.Invoke(stateManager.Level);
         }
 
-        private void LevelMaxCallback(UpgradableStateManager stateManager)
+        private void LevelMaxAlreadyReachedCallback(UpgradableStateManager stateManager)
         {
-            Debug.Log($"[{GetType().Name}] {stateManager.Name} is level max : {stateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {stateManager.Name} is level max : {stateManager.Level}");
             if (!stateManager.IsInstance(upgradableSO, instanceConfigSO)) return;
             OnLevelMax?.Invoke(stateManager.Level);
         }
 
         private void UpgradeSuccessCallback(UpgradableStateManager stateManager)
         {
-            Debug.Log($"[{GetType().Name}] {stateManager.Name} successfully upgraded to level {stateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {stateManager.Name} successfully upgraded to level {stateManager.Level}");
             if (!stateManager.IsInstance(upgradableSO, instanceConfigSO)) return;
             OnLevelUp?.Invoke(stateManager.Level);
             OnLevelUpWithData?.Invoke(stateManager);
@@ -144,21 +157,21 @@ namespace VV.Upgradable
 
         private void UpgradeFailedCallback(UpgradableStateManager stateManager)
         {
-            Debug.Log($"[{GetType().Name}] {stateManager.Name} failed to upgrade at level {stateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {stateManager.Name} failed to upgrade at level {stateManager.Level}");
             if (stateManager.IsInstance(upgradableSO, instanceConfigSO))
                 OnUpgradeFailed?.Invoke(stateManager);
         }
 
         private void UpgradableInitializedCallback(UpgradableBase upgradable)
         {
-            Debug.Log($"[{GetType().Name}] {upgradable.StateManager.Name} initialized at level {upgradable.StateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {upgradable.StateManager.Name} initialized at level {upgradable.StateManager.Level}");
             if(upgradable.StateManager.IsInstance(upgradableSO, instanceConfigSO))
                 OnInitialized?.Invoke(upgradable.StateManager.Level);
         }
         
         private void UpgradeManagerRollbackToPreviousLevel(UpgradableStateManager stateManager)
         {
-            Debug.Log($"[{GetType().Name}] {stateManager.Name} rollback to level {stateManager.Level}");
+            // Debug.Log($"[{GetType().Name}] {stateManager.Name} rollback to level {stateManager.Level}");
             if(stateManager.IsInstance(upgradableSO, instanceConfigSO))
                 OnLevelDown?.Invoke(stateManager.Level);
         }
